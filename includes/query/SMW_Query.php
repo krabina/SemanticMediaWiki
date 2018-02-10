@@ -78,6 +78,11 @@ class SMWQuery implements QueryContext {
 	public $sortkeys = array(); // format: "Property key" => "ASC" / "DESC" (note: order of entries also matters)
 	public $querymode = self::MODE_INSTANCES;
 
+	/**
+	 * @var string|null
+	 */
+	public $relevanceOrder;
+
 	private $limit;
 	private $offset = 0;
 	private $description;
@@ -377,6 +382,26 @@ class SMWQuery implements QueryContext {
 	public function setUnboundLimit( $limit ) {
 		$this->limit = (int)$limit;
 		return $this;
+	}
+
+	/**
+	 * @note Only available if the QueryEngine supports that option!
+	 *
+	 * @since 3.0
+	 *
+	 * @param string $order
+	 */
+	public function sortByRelevance( $relevanceOrder ) {
+		$this->relevanceOrder = $relevanceOrder;
+	}
+
+	/**
+	 * @since 3.0
+	 *
+	 * @param string|null
+	 */
+	public function getRelevanceOrder() {
+		return $this->relevanceOrder;
 	}
 
 	/**

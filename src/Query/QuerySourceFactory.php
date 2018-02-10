@@ -43,6 +43,8 @@ class QuerySourceFactory {
 		$this->store = $store;
 		$this->querySources = $querySources;
 		$this->queryEndpoint = $queryEndpoint;
+
+		$this->querySources['SMW\SQLStore\SQLStore'] = 'SMW\SQLStore\SQLStore';
 	}
 
 	/**

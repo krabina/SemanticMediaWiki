@@ -97,6 +97,14 @@ class DeleteSubjectTest extends \PHPUnit_Framework_TestCase {
 			->disableOriginalConstructor()
 			->getMock();
 
+		$changeDiff->expects( $this->any() )
+			->method( 'getTableChangeOps' )
+			->will( $this->returnValue( [] ) );
+
+		$changeDiff->expects( $this->any() )
+			->method( 'getTextItems' )
+			->will( $this->returnValue( [] ) );
+
 		$changeOp = $this->getMockBuilder( '\SMW\SQLStore\ChangeOp\ChangeOp' )
 			->disableOriginalConstructor()
 			->getMock();

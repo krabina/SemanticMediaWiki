@@ -3,6 +3,7 @@
 namespace SMW\SQLStore\EntityStore;
 
 use SMW\DIWikiPage;
+use SMW\PropertyRegistry;
 use SMW\HashBuilder;
 use SMW\ApplicationFactory;
 use SMW\MediaWiki\Database;
@@ -108,11 +109,29 @@ class ByIdEntityFinder {
 			return null;
 		}
 
-		$wikiPage = HashBuilder::newDiWikiPageFromHash(
-			$this->cache->fetch( $id )
+		$hash = $this->cache->fetch( $id );
+		$sortkey = '';
+		$sort = '';
+
+		list( $title, $namespace, $interwiki, $subobjectName ) = explode( '#', $hash, 4 );
+
+		if ( strpos( $subobjectName, '|' ) !== false ) {
+			list( $subobjectName, $sortkey, $sort ) = explode( '|', $subobjectName, 3 );
+		}
+
+		$wikiPage = new DIWikiPage(
+			$title,
+			$namespace,
+			$interwiki,
+			$subobjectName
 		);
 
 		$wikiPage->setId( $id );
+
+		if ( $sortkey !== '' ) {
+			$wikiPage->setSortKey( $sortkey );
+			$wikiPage->setOption( 'sort', $sort );
+		}
 
 		return $wikiPage;
 	}
@@ -127,7 +146,9 @@ class ByIdEntityFinder {
 				'smw_title',
 				'smw_namespace',
 				'smw_iw',
-				'smw_subobject'
+				'smw_subobject',
+				'smw_sortkey',
+				'smw_sort'
 			),
 			array( 'smw_id' => $id ),
 			__METHOD__
@@ -137,11 +158,15 @@ class ByIdEntityFinder {
 			return false;
 		}
 
+		if ( $row->smw_title !== '' && $row->smw_title{0} === '_' ) {
+			$row->smw_title = str_replace( ' ', '_', PropertyRegistry::getInstance()->findPropertyLabelById( $row->smw_title ) );
+		}
+
 		$hash = HashBuilder::createFromSegments(
 			$row->smw_title,
 			$row->smw_namespace,
 			$row->smw_iw,
-			$row->smw_subobject
+			$row->smw_subobject . '|'. $row->smw_sortkey .'|' . $row->smw_sort
 		);
 
 		$this->cache->save( $id, $hash );

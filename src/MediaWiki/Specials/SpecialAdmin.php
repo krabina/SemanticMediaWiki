@@ -88,8 +88,13 @@ class SpecialAdmin extends SpecialPage {
 			$this->getLanguage()
 		);
 
-		$store = $applicationFactory->getStore( '\SMW\SQLStore\SQLStore' );
-		$outputFormatter = new OutputFormatter( $this->getOutput() );
+		if ( !is_a( ( $store = $applicationFactory->getStore() ), '\SMW\SQLStore\SQLStore' ) ) {
+			$store = $applicationFactory->getStore( '\SMW\SQLStore\SQLStore' );
+		}
+
+		$outputFormatter = new OutputFormatter(
+			$this->getOutput()
+		);
 
 		$adminFeatures = $applicationFactory->getSettings()->get( 'smwgAdminFeatures' );
 

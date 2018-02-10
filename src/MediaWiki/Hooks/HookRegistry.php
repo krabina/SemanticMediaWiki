@@ -16,6 +16,7 @@ use SMW\PermissionPthValidator;
 use SMW\SQLStore\QueryDependencyLinksStoreFactory;
 use SMW\Site;
 use SMW\Setup;
+use SMW\Options;
 
 /**
  * @license GNU GPL v2+
@@ -762,10 +763,34 @@ class HookRegistry {
 			$applicationFactory->getStore()
 		);
 
+		$elasticFactory = new \SMW\Elastic\ElasticFactory();
+		$indexer = $elasticFactory->newIndexer( $applicationFactory->getStore() );
+
+		/**
+		 * @see https://www.mediawiki.org/wiki/Manual:Hooks/SoftwareInfo
+		 */
+		$this->handlers['SoftwareInfo'] = function ( &$software ) use ( $applicationFactory ) {
+
+			$connection = $applicationFactory->getStore()->getConnection( 'elastic' );
+
+			$component = '[https://www.elastic.co/products/elasticsearch Elasticsearch]';
+
+			if ( !isset( $software[$component] ) && ( $version = $connection->getVersion() ) ) {
+				$software[$component] = $version;
+			}
+		};
+
+		/**
+		 * @see https://www.semantic-mediawiki.org/wiki/Hooks#SMW::SQLStore::EntityReferenceCleanUpComplete
+		 */
+		$this->handlers['SMW::SQLStore::EntityReferenceCleanUpComplete'] = function ( $store, $id, $isRedirect ) use ( $indexer ) {
+			$indexer->delete( [ $id ], 'EntityReferenceCleanUpComplete' );
+		};
+
 		/**
 		 * @see https://www.semantic-mediawiki.org/wiki/Hooks#SMW::SQLStore::AfterDataUpdateComplete
 		 */
-		$this->handlers['SMW::SQLStore::AfterDataUpdateComplete'] = function ( $store, $semanticData, $changeOp ) use ( $queryDependencyLinksStoreFactory, $queryDependencyLinksStore, $deferredRequestDispatchManager ) {
+		$this->handlers['SMW::SQLStore::AfterDataUpdateComplete'] = function ( $store, $semanticData, $changeOp ) use ( $applicationFactory, $queryDependencyLinksStoreFactory, $queryDependencyLinksStore, $deferredRequestDispatchManager ) {
 
 			$queryDependencyLinksStore->setStore( $store );
 			$subject = $semanticData->getSubject();
@@ -808,7 +833,13 @@ class HookRegistry {
 		 */
 		$this->handlers['SMW::Store::BeforeQueryResultLookupComplete'] = function ( $store, $query, &$result, $queryEngine ) use ( $applicationFactory ) {
 
-			$cachedQueryResultPrefetcher = $applicationFactory->singleton( 'CachedQueryResultPrefetcher' );
+			if ( $applicationFactory->getSettings()->get( 'smwgQueryResultCacheType' ) === false ) {
+				return true;
+			}
+
+			$cachedQueryResultPrefetcher = $applicationFactory->singleton(
+				'CachedQueryResultPrefetcher'
+			);
 
 			$cachedQueryResultPrefetcher->setQueryEngine(
 				$queryEngine
@@ -818,7 +849,9 @@ class HookRegistry {
 				return true;
 			}
 
-			$result = $cachedQueryResultPrefetcher->getQueryResult( $query );
+			$result = $cachedQueryResultPrefetcher->getQueryResult(
+				$query
+			);
 
 			return false;
 		};

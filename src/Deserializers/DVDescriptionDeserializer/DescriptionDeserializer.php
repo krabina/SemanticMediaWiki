@@ -133,6 +133,11 @@ abstract class DescriptionDeserializer implements DispatchableDeserializer {
 				$value = "~$value";
 			}
 		}
+
+		if ( $comparator === SMW_CMP_PHRASE ) {
+			$comparator = SMW_CMP_LIKE;
+			$value = '"' . $value . '"';
+		}
 	}
 
 }

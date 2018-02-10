@@ -4,6 +4,7 @@ namespace SMW\Query\Language;
 
 use Exception;
 use SMW\DataValueFactory;
+use SMW\Localizer;
 use SMW\DIWikiPage;
 
 /**
@@ -91,7 +92,7 @@ class ClassDescription extends Description {
 
 		ksort( $hash );
 
-		return 'Cl:' . md5( implode( '|', array_keys( $hash ) ) . $this->hierarchyDepth );
+		return 'Cl:' . md5( implode( '|', array_keys( $hash ) ) . $this->hierarchyDepth . ( isset( $this->isNegation ) ? '|' . $this->isNegation : '' ) );
 	}
 
 	/**
@@ -104,11 +105,13 @@ class ClassDescription extends Description {
 	public function getQueryString( $asValue = false ) {
 
 		$first = true;
+		$namespaceText = Localizer::getInstance()->getNamespaceTextById( NS_CATEGORY );
 
 		foreach ( $this->m_diWikiPages as $wikiPage ) {
 			$wikiValue = DataValueFactory::getInstance()->newDataValueByItem( $wikiPage, null );
 			if ( $first ) {
-				$result = '[[' . $wikiValue->getPrefixedText();
+			//	$result = '[[' . $wikiValue->getPrefixedText();
+				$result = '[[' . $namespaceText . ':' . ( isset( $this->isNegation ) ? '!' : '' ) . $wikiValue->getText();
 				$first = false;
 			} else {
 				$result .= '||' . $wikiValue->getText();

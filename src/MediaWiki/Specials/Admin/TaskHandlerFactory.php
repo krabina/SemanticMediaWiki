@@ -66,6 +66,7 @@ class TaskHandlerFactory {
 			$this->newOperationalStatisticsListTaskHandler(),
 			$this->newDuplicateLookupTaskHandler(),
 			$this->newEntityLookupTaskHandler( $user ),
+			$this->newElasticsearchInfoTaskHandler(),
 
 			// TaskHandler::SECTION_SUPPORT
 			$this->newSupportListTaskHandler()
@@ -150,6 +151,15 @@ class TaskHandlerFactory {
 	 */
 	public function newOperationalStatisticsListTaskHandler() {
 		return new OperationalStatisticsListTaskHandler( $this->outputFormatter );
+	}
+
+	/**
+	 * @since 2.5
+	 *
+	 * @return ElasticsearchInfoTaskHandler
+	 */
+	public function newElasticsearchInfoTaskHandler() {
+		return new ElasticsearchInfoTaskHandler( $this->outputFormatter );
 	}
 
 	/**

@@ -168,6 +168,7 @@
 			"type": "query",
 			"about": "#8 free search (wide proximity)",
 			"skip-on": {
+				"elastic": "ES matches only `with` not `without`",
 				"sqlite": "works different in comparison to MySQL, see #9"
 			},
 			"condition": "[[~~with a category]]",
@@ -180,6 +181,24 @@
 				"results": [
 					"Example/Q0105/4#0##_9f1222a5f6669be2c5f76dd5af08a4dc",
 					"Example/Q0105/4#0##_b827401b701c08c3c3d610a3a43d18c3"
+				]
+			}
+		},
+		{
+			"type": "query",
+			"about": "#8.elastic",
+			"skip-on": {
+				"elastic": [ "not", "See #8" ]
+			},
+			"condition": "[[~~with a category]]",
+			"printouts": [],
+			"parameters": {
+				"limit": "10"
+			},
+			"assert-queryresult": {
+				"count": 1,
+				"results": [
+					"Example/Q0105/4#0##_9f1222a5f6669be2c5f76dd5af08a4dc"
 				]
 			}
 		},

@@ -376,9 +376,18 @@ class SpecialAsk extends SpecialPage {
 	private function getInfoText( $duration, $isFromCache = false ) {
 
 		$infoText = '';
+		$source = null;
+
+		if ( isset( $this->parameters['source'] ) ) {
+			$source = $this->parameters['source'];
+		}
+
+		if ( $this->getRequest()->getVal( 'q_engine' ) === 'sql' ) {
+			$source = 'SMW\SQLStore\SQLStore';
+		}
 
 		$querySource = $this->querySourceFactory->getAsString(
-			isset( $this->parameters['source'] ) ? $this->parameters['source'] : null
+			$source
 		);
 
 		if ( $duration > 0 ) {
@@ -643,12 +652,18 @@ class SpecialAsk extends SpecialPage {
 		}
 
 		$queryobj->setOption( SMWQuery::PROC_CONTEXT, 'SpecialAsk' );
+		$source = $params['source']->getValue();
+		$noSource = $source === '';
+
+		if ( $this->getRequest()->getVal( 'q_engine' ) === 'sql' ) {
+			$source = 'SMW\SQLStore\SQLStore';
+		}
 
 		/**
 		 * @var QueryEngine $queryEngine
 		 */
 		$queryEngine = $this->querySourceFactory->get(
-			$params['source']->getValue()
+			$source
 		);
 
 		// Measure explicit to account for a federated (sourced) query
@@ -664,7 +679,7 @@ class SpecialAsk extends SpecialPage {
 		$duration = number_format( ( microtime( true ) - $duration ), 4, '.', '' );
 
 		// Allow to generate a debug output
-		if ( $this->getRequest()->getVal( 'debug' ) && $params['source']->getValue() === '' ) {
+		if ( $this->getRequest()->getVal( 'debug' ) && $noSource ) {
 
 			$queryobj = QueryProcessor::createQuery(
 				$this->queryString,
